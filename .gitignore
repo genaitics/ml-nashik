@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+venv/
+.venv/
+backend/venv/
+
+# Build outputs
+dist/
+frontend/dist/
+*.egg-info/
+__pycache__/
+backend/__pycache__/
+backend/*/__pycache__/
+
+# Environment & Secrets
+.env
+backend/.env
+!.env.example
+!backend/.env.example
+
+# Local Databases & Vector Stores
+*.db
+*.sqlite
+backend/database.db
+backend/chromadb_data/
+
+# Logs & Temporary files
+*.log
+.DS_Store

@@ -1,0 +1,22 @@
+EduMentor AI Sample Course Syllabus: Machine Learning & Artificial Intelligence Engineering
+
+Course Overview:
+This course introduces fundamental concepts and practical algorithms in modern machine learning and artificial intelligence, including supervised learning, unsupervised learning, retrieval-augmented generation (RAG), and evaluation metrics.
+
+Unit 1: Supervised Learning & Model Foundations
+- Supervised learning algorithms rely on labeled dataset pairs (input features, target labels) to learn a predictive mapping function.
+- Linear Regression minimizes the Mean Squared Error (MSE) between predicted real-valued outputs and actual ground truth targets.
+- Logistic Regression applies the Sigmoid activation function to map linear outputs to probabilities for binary classification tasks.
+- Decision Trees partition feature space recursively based on Information Gain or Gini Impurity metrics.
+
+Unit 2: Unsupervised Learning & Vector Embeddings
+- Unsupervised learning methods discover latent patterns and geometric structure in unlabeled data without target labels.
+- K-Means Clustering partitions dataset points into K clusters by iteratively optimizing cluster centroids to minimize within-cluster inertia.
+- Dimensionality Reduction techniques like Principal Component Analysis (PCA) project high-dimensional feature vectors onto orthogonal principal components while maximizing variance.
+- Vector Embeddings map high-dimensional textual or multimedia tokens into dense vector spaces where spatial proximity reflects semantic similarity.
+
+Unit 3: Retrieval-Augmented Generation (RAG) & Agentic Workflows
+- Retrieval-Augmented Generation (RAG) combines dense vector retrieval from persistent vector databases (e.g., ChromaDB) with Large Language Models (LLMs) to ground model generation on domain-specific document context.
+- Document Chunking breaks large source documents into smaller, overlapping text segments to preserve contextual boundaries during embedding and retrieval.
+- Grounded Evaluation validates that LLM outputs, quiz questions, and automated grading verdicts strictly adhere to retrieved source chunk excerpts without hallucinating unverified facts.
+- Agentic Architecture decouples system responsibilities into specialized autonomous agents: Document Agent for parsing and indexing, Generation Agent for quiz creation, and Evaluation Agent for grading and feedback.

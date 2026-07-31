@@ -1,0 +1,67 @@
+{
+  "description": "Pre-cached high quality MCQs and evaluation explanations for Machine Learning demo fallback",
+  "questions": [
+    {
+      "id": "demo_q1",
+      "text": "Which technique is primarily used to prevent overfitting in deep neural networks by randomly deactivating neuron outputs during training?",
+      "options": ["Batch Normalization", "Dropout", "Gradient Clipping", "L1 Regularization"],
+      "correct_option": "B",
+      "source_chunk_id": "chunk_demo_1"
+    },
+    {
+      "id": "demo_q2",
+      "text": "What does the Bias-Variance tradeoff represent in supervised machine learning models?",
+      "options": [
+        "The balance between model underfitting (high bias) and overfitting (high variance)",
+        "The balance between training speed and GPU memory usage",
+        "The choice between classification and regression algorithms",
+        "The ratio of training samples to testing samples"
+      ],
+      "correct_option": "A",
+      "source_chunk_id": "chunk_demo_2"
+    },
+    {
+      "id": "demo_q3",
+      "text": "In binary classification on highly imbalanced datasets, which evaluation metric is preferred over raw accuracy?",
+      "options": ["F1-Score / Area Under ROC Curve (AUC)", "Mean Squared Error (MSE)", "R-squared Score", "Sum of Squared Errors (SSE)"],
+      "correct_option": "A",
+      "source_chunk_id": "chunk_demo_3"
+    },
+    {
+      "id": "demo_q4",
+      "text": "Which optimization algorithm updates model parameters iteratively in the direction of the negative gradient of the loss function?",
+      "options": ["K-Means Clustering", "Gradient Descent", "Principal Component Analysis", "Expectation Maximization"],
+      "correct_option": "B",
+      "source_chunk_id": "chunk_demo_4"
+    },
+    {
+      "id": "demo_q5",
+      "text": "Which machine learning paradigm involves an agent interacting with an environment to maximize cumulative rewards through trial and error?",
+      "options": ["Supervised Learning", "Unsupervised Learning", "Reinforcement Learning", "Self-Supervised Learning"],
+      "correct_option": "C",
+      "source_chunk_id": "chunk_demo_5"
+    }
+  ],
+  "evaluation_templates": {
+    "demo_q1": {
+      "explanation_correct": "Correct! Dropout randomly deactivates neurons during training with a specified probability, forcing the network to learn redundant representations and effectively preventing overfitting.",
+      "explanation_incorrect": "Incorrect. You selected an incorrect option. Dropout is the technique that randomly zeroes out neuron outputs during training to mitigate overfitting."
+    },
+    "demo_q2": {
+      "explanation_correct": "Correct! High bias leads to underfitting simple models, while high variance leads to overfitting noisy training data.",
+      "explanation_incorrect": "Incorrect. The Bias-Variance tradeoff characterizes the delicate balance between model underfitting (high bias) and overfitting (high variance)."
+    },
+    "demo_q3": {
+      "explanation_correct": "Correct! F1-score (harmonic mean of precision and recall) and AUC-ROC are robust evaluation metrics for imbalanced classification tasks.",
+      "explanation_incorrect": "Incorrect. Raw accuracy can be misleading on imbalanced datasets, whereas F1-Score or AUC-ROC accurately measures performance across minority classes."
+    },
+    "demo_q4": {
+      "explanation_correct": "Correct! Gradient descent iteratively subtracts the gradient vector of the loss function scaled by learning rate to reach parameter minima.",
+      "explanation_incorrect": "Incorrect. Gradient Descent optimizes parameters by iteratively stepping opposite to the gradient vector of the loss function."
+    },
+    "demo_q5": {
+      "explanation_correct": "Correct! Reinforcement learning formulates problems as Markov Decision Processes where agents receive scalar rewards for selected actions.",
+      "explanation_incorrect": "Incorrect. Reinforcement learning is based on feedback/reward signals resulting from interaction choices in an environment."
+    }
+  }
+}

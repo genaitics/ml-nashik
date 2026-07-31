@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  /* Paper texture background utility */
+  .paper-texture {
+    background-color: #fbf9f5;
+    background-image: radial-gradient(#181f21 0.4px, transparent 0.4px);
+    background-size: 16px 16px;
+    background-position: 0 0;
+  }
+  
+  .paper-grid {
+    background-size: 24px 24px;
+    background-image: 
+      linear-gradient(to right, rgba(116, 120, 121, 0.08) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(116, 120, 121, 0.08) 1px, transparent 1px);
+  }
+
+  /* Ruled paper line effect */
+  .ruled-paper {
+    background-image: repeating-linear-gradient(
+      transparent,
+      transparent 31px,
+      #e4e2de 31px,
+      #e4e2de 32px
+    );
+  }
+
+  /* Dashed cut-out border for code/excerpts */
+  .border-dashed-notebook {
+    border: 2px dashed #747879;
+  }
+
+  /* Hand-drawn highlighter effect behind text */
+  .highlighter-effect {
+    position: relative;
+    display: inline-block;
+    z-index: 1;
+  }
+  
+  .highlighter-effect::after {
+    content: "";
+    position: absolute;
+    bottom: 2px;
+    left: -4px;
+    right: -4px;
+    height: 45%;
+    background-color: #f2e580;
+    z-index: -1;
+    border-radius: 2px;
+    transform: rotate(-0.5deg);
+    opacity: 0.85;
+  }
+
+  /* Yellow sticky note tilt */
+  .sticky-note {
+    background-color: #fef9c3;
+    border: 1px solid #fde047;
+    box-shadow: 3px 6px 15px rgba(0, 0, 0, 0.05);
+    transform: rotate(-1.5deg);
+    transition: transform 0.2s ease-in-out;
+  }
+
+  .sticky-note:hover {
+    transform: rotate(0deg) scale(1.01);
+  }
+
+  /* Paper margin line accent */
+  .paper-margin-left {
+    border-left: 4px solid #181f21;
+  }
+  
+  .paper-margin-sage {
+    border-left: 4px solid #14392b;
+  }
+
+  .paper-margin-yellow {
+    border-left: 4px solid #f2e580;
+  }
+
+  /* Custom scrollbar for excerpts */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #efeeea;
+    border-radius: 3px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #747879;
+    border-radius: 3px;
+  }
+
+  /* Smooth slide & fade page transition */
+  @keyframes slideFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(18px) scale(0.995);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .animate-slide-fade {
+    animation: slideFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
