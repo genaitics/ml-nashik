@@ -61,11 +61,15 @@ export const api = {
   /**
    * Generate Quiz from Document
    */
-  async generateQuiz(docId: string, numQuestions: number = 5): Promise<Quiz> {
+  async generateQuiz(docId: string, numQuestions: number = 5, selectedTopics?: string[]): Promise<Quiz> {
     const response = await fetch(`${API_BASE}/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ doc_id: docId, num_questions: numQuestions }),
+      body: JSON.stringify({ 
+        doc_id: docId, 
+        num_questions: numQuestions,
+        selected_topics: selectedTopics
+      }),
     });
 
     if (!response.ok) {

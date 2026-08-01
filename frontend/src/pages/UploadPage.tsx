@@ -5,7 +5,7 @@ import { api } from '../api/client';
 
 interface UploadPageProps {
   onUploadSuccess: (docData: DocumentUploadResponse, fileObj?: File) => void;
-  onGenerateQuiz: () => void;
+  onGenerateQuiz: (topics?: string[]) => void;
   isGenerating: boolean;
   uploadedDoc: DocumentUploadResponse | null;
 }
@@ -20,7 +20,20 @@ export const UploadPage: React.FC<UploadPageProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    if (uploadedDoc) {
+      setSelectedTopics(uploadedDoc.topics_detected || []);
+    }
+  }, [uploadedDoc]);
+
+  const toggleTopic = (topic: string) => {
+    setSelectedTopics(prev => 
+      prev.includes(topic) ? prev.filter(t => t !== topic) : [...prev, topic]
+    );
+  };
 
   const handleFileUpload = async (file: File) => {
     setSelectedFile(file);
@@ -219,15 +232,23 @@ export const UploadPage: React.FC<UploadPageProps> = ({
             </div>
 
             <div className="flex flex-wrap gap-2 pt-1">
-              {(uploadedDoc?.topics_detected || []).map((topic, i) => (
-                <span
+              {(uploadedDoc?.topics_detected || []).map((topic, i) => {
+                const isSelected = selectedTopics.includes(topic);
+                return (
+                <button
                   key={i}
-                  className="bg-paper-surface text-ink px-3 py-1.5 rounded-lg text-xs font-mono border border-ink/20 shadow-paper-sm flex items-center space-x-1.5"
+                  type="button"
+                  onClick={() => toggleTopic(topic)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-mono border shadow-paper-sm flex items-center space-x-1.5 transition-colors ${
+                    isSelected 
+                      ? 'bg-highlighter text-ink border-ink' 
+                      : 'bg-paper-surface text-ink-pencil border-ink/20 hover:border-ink/50'
+                  }`}
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-highlighter-hover" />
+                  <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-ink' : 'bg-ink/20'}`} />
                   <span>{topic}</span>
-                </span>
-              ))}
+                </button>
+              )})}
               {(!uploadedDoc || uploadedDoc.topics_detected.length === 0) && (
                 <p className="text-xs font-mono text-ink-pencil italic">Upload a syllabus to detect topics.</p>
               )}
@@ -256,7 +277,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({
           </div>
 
           <button
-            onClick={onGenerateQuiz}
+            onClick={() => onGenerateQuiz(selectedTopics)}
             disabled={!uploadedDoc || isGenerating}
             className={`px-8 py-3.5 rounded-xl font-medium text-base transition-all flex items-center space-x-3 shadow-paper-md ${
               uploadedDoc && !isGenerating

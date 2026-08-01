@@ -45,12 +45,12 @@ export const App: React.FC = () => {
   };
 
 
-  const handleGenerateQuiz = async () => {
+  const handleGenerateQuiz = async (selectedTopics?: string[]) => {
     if (!documentData) return;
     setIsGenerating(true);
 
     try {
-      const quiz = await api.generateQuiz(documentData.doc_id, 5);
+      const quiz = await api.generateQuiz(documentData.doc_id, 5, selectedTopics);
       setQuizData(quiz);
       setStep('quiz');
     } catch (err) {

@@ -16,14 +16,14 @@ except ImportError:
 class GenerationAgent:
     def __init__(self, vector_store: ChromaVectorStore = None, model_name: str = None):
         self.vector_store = vector_store or ChromaVectorStore()
-        self.model_name = model_name or os.getenv("GEMINI_MODEL", "gemma-4").strip()
+        self.model_name = model_name or os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
 
-    def generate_quiz(self, db: Session, document_id: str, num_questions: int = 5, model_name: str = None) -> Dict[str, Any]:
+    def generate_quiz(self, db: Session, document_id: str, num_questions: int = 5, model_name: str = None, selected_topics: list[str] = None) -> Dict[str, Any]:
         """
         Retrieves top syllabus chunks, prompts Gemini API (or fallback generator),
         creates strictly formatted MCQ JSON, saves to SQLite quizzes table, and returns result.
         """
-        selected_model = model_name or self.model_name or os.getenv("GEMINI_MODEL", "gemma-4").strip()
+        selected_model = model_name or self.model_name or os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
 
         # Verify document exists in DB
         doc = db.query(Document).filter(Document.id == document_id).first()
@@ -31,7 +31,10 @@ class GenerationAgent:
             raise ValueError(f"Document with ID '{document_id}' not found.")
 
         # Retrieve relevant chunks from vector store
-        query_text = "core concepts key topics definitions principles exam questions syllabus overview"
+        if selected_topics:
+            query_text = " ".join(selected_topics)
+        else:
+            query_text = "core concepts key topics definitions principles exam questions syllabus overview"
         retrieved_chunks = self.vector_store.similarity_search(document_id, query_text, top_k=max(num_questions * 2, 5))
 
         if not retrieved_chunks:
@@ -50,7 +53,13 @@ class GenerationAgent:
         questions = None
 
         if gemini_key and requests:
-            questions = self._call_gemini_for_questions(gemini_key, retrieved_chunks, num_questions, model_name=selected_model)
+            questions = self._call_gemini_for_questions(
+                gemini_key, 
+                retrieved_chunks, 
+                num_questions, 
+                model_name=selected_model,
+                selected_topics=selected_topics
+            )
 
         if not questions:
             # Grounded fallback heuristic quiz generator based on actual PDF text
@@ -101,12 +110,15 @@ class GenerationAgent:
 
         return quiz_payload
 
-    def _call_gemini_for_questions(self, api_key: str, chunks: List[Dict[str, Any]], num_questions: int, model_name: str = "gemma-4") -> List[Dict[str, Any]]:
+    def _call_gemini_for_questions(self, api_key: str, chunks: List[Dict[str, Any]], num_questions: int, model_name: str = "gemini-1.5-flash", selected_topics: list[str] = None) -> List[Dict[str, Any]]:
         """Prompts Gemini REST API for MCQ generation with retry-once logic for non-JSON output."""
         context_str = "\n---\n".join([f"[Chunk ID: {c['id']}]\n{c['text']}" for c in chunks])
         
+        topic_instruction = f"Ensure the questions focus ONLY on these selected topics: {', '.join(selected_topics)}.\n" if selected_topics else ""
+
         prompt = (
             f"You are generating {num_questions} exam questions strictly from the provided syllabus excerpts.\n"
+            f"{topic_instruction}"
             "Generate a mix of 'mcq', 'short', and 'long' question types.\n"
             "Do NOT use outside knowledge.\n"
             "Excerpts:\n"
@@ -234,35 +246,54 @@ class GenerationAgent:
         
         sentences = []
         for c in chunks:
-            chunk_sents = [s.strip() for s in re.split(r"[.!?]\s+", c["text"]) if len(s.strip()) > 20]
+            # Only keep sentences that have actual letters in them to avoid garbage symbols
+            chunk_sents = [s.strip() for s in re.split(r"[.!?]\s+", c["text"]) if len(s.strip()) > 20 and re.search(r'[a-zA-Z]{4,}', s)]
             for s in chunk_sents:
                 sentences.append((s, c["id"]))
 
         if not sentences:
-            sentences = [("The course covers core software principles and evaluation techniques.", chunks[0]["id"])]
+            sentences = [("The syllabus covers core principles and evaluation techniques for this course.", chunks[0]["id"])]
+
+        # Extract a pool of good candidate words from the text to use as distractors
+        all_text = " ".join([s[0] for s in sentences])
+        all_words = list(set([w for w in re.findall(r"\b[A-Z][a-z]{3,}\b", all_text)]))
+        if len(all_words) < 10:
+             all_words += ["Methodology", "Algorithm", "Framework", "Architecture", "Optimization", "Analysis", "Implementation", "Evaluation"]
 
         for i in range(num_questions):
             sent, chunk_id = sentences[i % len(sentences)]
-            words = [w for w in re.findall(r"\b[A-Za-z]{4,}\b", sent) if w.lower() not in {"this", "that", "with", "from", "have", "which", "their"}]
+            # Find capitalized words first (more likely to be specific concepts)
+            words = [w for w in re.findall(r"\b[A-Z][a-z]{3,}\b", sent)]
+            if not words:
+                words = [w for w in re.findall(r"\b[A-Za-z]{5,}\b", sent) if w.lower() not in {"these", "those", "their", "which", "would", "could", "should", "other", "about"}]
             
             target_word = words[0] if words else "concept"
             masked_text = re.sub(re.escape(target_word), "____", sent, count=1, flags=re.IGNORECASE)
             
-            question_text = f"According to the syllabus: '{masked_text}' What key term fills in the blank?"
+            question_text = f"According to the text: '{masked_text}' What key term fills in the blank?"
             
             correct = target_word.capitalize()
-            opt_b = f"Incorrect Concept {i+1}"
-            opt_c = f"Alternative Theory {i+1}"
-            opt_d = f"General Topic {i+1}"
+            
+            # Select 3 random distractors that are not the correct answer
+            distractors = [w for w in all_words if w.lower() != correct.lower()]
+            import random
+            selected_distractors = random.sample(distractors, min(3, len(distractors)))
+            while len(selected_distractors) < 3:
+                selected_distractors.append(f"Alternative {len(selected_distractors)+1}")
+
+            options = [correct] + selected_distractors
+            # Shuffle options
+            random.shuffle(options)
+            correct_idx = options.index(correct)
 
             questions.append({
                 "id": i+1,
                 "type": "mcq",
                 "question": question_text,
-                "options": [correct, opt_b, opt_c, opt_d],
-                "correct_option": 0,
+                "options": options,
+                "correct_option": correct_idx,
                 "ideal_answer": "",
-                "topic": "Syllabus Concept",
+                "topic": "Extracted Concept",
                 "explanation": f"The missing concept is {correct}.",
                 "source_excerpt": sent,
                 "source_chunk_id": chunk_id

@@ -13,6 +13,7 @@ generation_agent = GenerationAgent()
 class GenerateRequest(BaseModel):
     doc_id: str = Field(..., description="UUID of the uploaded document")
     num_questions: int = Field(5, ge=1, le=20, description="Number of questions to generate")
+    selected_topics: list[str] | None = Field(None, description="Optional list of topics to focus the quiz on")
 
 
 @router.post("/generate", status_code=status.HTTP_200_OK)
@@ -28,7 +29,8 @@ def generate_quiz(
         quiz_payload = generation_agent.generate_quiz(
             db=db,
             document_id=request.doc_id,
-            num_questions=request.num_questions
+            num_questions=request.num_questions,
+            selected_topics=request.selected_topics
         )
         return quiz_payload
     except ValueError as ve:
