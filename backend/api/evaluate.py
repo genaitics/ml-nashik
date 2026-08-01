@@ -7,18 +7,47 @@ router = APIRouter(tags=["Quiz Evaluation"])
 evaluation_agent = EvaluationAgent()
 
 
-@router.get("/evaluate/{submission_id}", status_code=status.HTTP_200_OK)
+from pydantic import BaseModel
+import uuid
+import json
+from db.models import Submission
+
+class AnswerItem(BaseModel):
+    question_id: int | str
+    selected_option: int | str = ""
+    text_answer: str = ""
+
+class EvaluateRequest(BaseModel):
+    quiz_id: str
+    answers: list[AnswerItem]
+
+
+@router.post("/evaluate", status_code=status.HTTP_200_OK)
 def evaluate_submission(
-    submission_id: str,
+    request: EvaluateRequest,
     db: Session = Depends(get_db)
 ):
     """
-    Retrieves submission and quiz, looks up ground truth source chunk per question,
-    prompts Gemini API or fallback evaluator, records score, verdict, explanations,
-    source excerpts, and weak topics in SQLite, and returns result JSON.
+    Creates a submission record from user answers and triggers the evaluation agent.
     """
     try:
-        result = evaluation_agent.evaluate_submission(db, submission_id)
+        sub_id = str(uuid.uuid4())
+        answers_list = [
+            {"question_id": a.question_id, "selected_option": a.selected_option, "text_answer": a.text_answer}
+            for a in request.answers
+        ]
+        db_sub = Submission(
+            id=sub_id,
+            quiz_id=request.quiz_id,
+            answers_json=json.dumps(answers_list),
+            evaluated=0,
+            result_json=""
+        )
+        db.add(db_sub)
+        db.commit()
+        db.refresh(db_sub)
+        
+        result = evaluation_agent.evaluate_submission(db, sub_id)
         return result
     except ValueError as ve:
         raise HTTPException(

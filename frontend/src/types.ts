@@ -74,7 +74,8 @@ export type PageStep =
   | 'results' 
   | 'my-courses'
   | 'class-analytics'
-  | 'chat';
+  | 'chat'
+  | 'teacher-quiz-preview';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';

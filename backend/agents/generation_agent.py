@@ -16,14 +16,14 @@ except ImportError:
 class GenerationAgent:
     def __init__(self, vector_store: ChromaVectorStore = None, model_name: str = None):
         self.vector_store = vector_store or ChromaVectorStore()
-        self.model_name = model_name or os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
+        self.model_name = model_name or os.getenv("GEMINI_MODEL", "gemma-4-26b-a4b-it").strip()
 
     def generate_quiz(self, db: Session, document_id: str, num_questions: int = 5, model_name: str = None, selected_topics: list[str] = None) -> Dict[str, Any]:
         """
         Retrieves top syllabus chunks, prompts Gemini API (or fallback generator),
         creates strictly formatted MCQ JSON, saves to SQLite quizzes table, and returns result.
         """
-        selected_model = model_name or self.model_name or os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
+        selected_model = model_name or self.model_name or os.getenv("GEMINI_MODEL", "gemma-4-26b-a4b-it").strip()
 
         # Verify document exists in DB
         doc = db.query(Document).filter(Document.id == document_id).first()
@@ -110,7 +110,7 @@ class GenerationAgent:
 
         return quiz_payload
 
-    def _call_gemini_for_questions(self, api_key: str, chunks: List[Dict[str, Any]], num_questions: int, model_name: str = "gemini-1.5-flash", selected_topics: list[str] = None) -> List[Dict[str, Any]]:
+    def _call_gemini_for_questions(self, api_key: str, chunks: List[Dict[str, Any]], num_questions: int, model_name: str = "gemma-4-26b-a4b-it", selected_topics: list[str] = None) -> List[Dict[str, Any]]:
         """Prompts Gemini REST API for MCQ generation with retry-once logic for non-JSON output."""
         context_str = "\n---\n".join([f"[Chunk ID: {c['id']}]\n{c['text']}" for c in chunks])
         
@@ -262,29 +262,25 @@ class GenerationAgent:
 
         for i in range(num_questions):
             sent, chunk_id = sentences[i % len(sentences)]
-            # Find capitalized words first (more likely to be specific concepts)
-            words = [w for w in re.findall(r"\b[A-Z][a-z]{3,}\b", sent)]
-            if not words:
-                words = [w for w in re.findall(r"\b[A-Za-z]{5,}\b", sent) if w.lower() not in {"these", "those", "their", "which", "would", "could", "should", "other", "about"}]
             
-            target_word = words[0] if words else "concept"
-            masked_text = re.sub(re.escape(target_word), "____", sent, count=1, flags=re.IGNORECASE)
+            # True statement
+            correct = sent
             
-            question_text = f"According to the text: '{masked_text}' What key term fills in the blank?"
-            
-            correct = target_word.capitalize()
-            
-            # Select 3 random distractors that are not the correct answer
-            distractors = [w for w in all_words if w.lower() != correct.lower()]
+            # False statements (distractors from other sentences)
+            other_sentences = [s for s, _ in sentences if s != sent]
             import random
-            selected_distractors = random.sample(distractors, min(3, len(distractors)))
-            while len(selected_distractors) < 3:
-                selected_distractors.append(f"Alternative {len(selected_distractors)+1}")
+            random.shuffle(other_sentences)
+            distractors = other_sentences[:3]
+            
+            while len(distractors) < 3:
+                distractors.append(f"The syllabus primarily focuses on alternative theory {len(distractors)}.")
 
-            options = [correct] + selected_distractors
+            options = [correct] + distractors
             # Shuffle options
             random.shuffle(options)
             correct_idx = options.index(correct)
+            
+            question_text = "Which of the following statements is explicitly supported by the syllabus text?"
 
             questions.append({
                 "id": i+1,
@@ -293,8 +289,8 @@ class GenerationAgent:
                 "options": options,
                 "correct_option": correct_idx,
                 "ideal_answer": "",
-                "topic": "Extracted Concept",
-                "explanation": f"The missing concept is {correct}.",
+                "topic": "Syllabus Analysis",
+                "explanation": f"The correct statement is found directly in the text: '{correct}'",
                 "source_excerpt": sent,
                 "source_chunk_id": chunk_id
             })

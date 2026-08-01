@@ -15,7 +15,7 @@ except ImportError:
 class EvaluationAgent:
     def __init__(self, vector_store: ChromaVectorStore = None, model_name: str = None):
         self.vector_store = vector_store or ChromaVectorStore()
-        self.model_name = model_name or os.getenv("GEMINI_MODEL", "gemma-4").strip()
+        self.model_name = model_name or os.getenv("GEMINI_MODEL", "gemma-4-26b-a4b-it").strip()
 
     def evaluate_submission(self, db: Session, submission_id: str, model_name: str = None) -> Dict[str, Any]:
         """
@@ -23,7 +23,7 @@ class EvaluationAgent:
         evaluates answer correctness (MCQ or Free-text), calls Gemini API,
         generates personalized report, updates SQLite, and returns payload.
         """
-        selected_model = model_name or self.model_name or os.getenv("GEMINI_MODEL", "gemma-4").strip()
+        selected_model = model_name or self.model_name or os.getenv("GEMINI_MODEL", "gemma-4-26b-a4b-it").strip()
 
         sub = db.query(Submission).filter(Submission.id == submission_id).first()
         if not sub:
@@ -75,35 +75,52 @@ class EvaluationAgent:
 
             if q_type == "mcq":
                 correct_opt = str(q.get("correct_option", "A")).strip().upper()
-                is_correct = (user_opt == correct_opt)
-                verdict = "correct" if is_correct else "incorrect"
-                q_score = 1.0 if is_correct else 0.0
-                q_max = 1.0
                 
-                if not is_correct:
+                if user_opt == "-1" or not user_opt:
+                    is_correct = False
+                    verdict = "skipped"
+                    q_score = 0.0
+                    q_max = 1.0
+                    explanation = "You skipped this question."
+                    
                     topic_match = re.search(r"'(.*?)'", q.get("text", ""))
                     if topic_match:
                         weak_topics_set.add(topic_match.group(1)[:30])
                     else:
                         weak_topics_set.add(f"Concept from {chunk_id}")
+                else:
+                    is_correct = (user_opt == correct_opt)
+                    verdict = "correct" if is_correct else "incorrect"
+                    q_score = 1.0 if is_correct else 0.0
+                    q_max = 1.0
+                    
+                    if not is_correct:
+                        topic_match = re.search(r"'(.*?)'", q.get("text", ""))
+                        if topic_match:
+                            weak_topics_set.add(topic_match.group(1)[:30])
+                        else:
+                            weak_topics_set.add(f"Concept from {chunk_id}")
 
-                explanation = None
-                if gemini_key and requests:
-                    explanation = self._evaluate_mcq_with_gemini(
-                        gemini_key, q.get("text", ""), user_opt, correct_opt, source_excerpt, is_correct, model_name=selected_model
-                    )
-                if not explanation:
-                    explanation = self._load_precache_explanation(q_id, is_correct)
-                if not explanation:
-                    explanation = f"{'Correct' if is_correct else 'Incorrect'}. Ground truth excerpt: '{source_excerpt[:120]}...'"
+                    explanation = None
+                    if gemini_key and requests:
+                        explanation = self._evaluate_mcq_with_gemini(
+                            gemini_key, q.get("text", ""), user_opt, correct_opt, source_excerpt, is_correct, model_name=selected_model
+                        )
+                    if not explanation:
+                        explanation = self._load_precache_explanation(q_id, is_correct)
+                    if not explanation:
+                        explanation = f"{'Correct' if is_correct else 'Incorrect'}. Ground truth excerpt: '{source_excerpt[:120]}...'"
                     
             else: # short or long
                 q_max = 10.0
-                eval_result = None
-                if gemini_key and requests:
-                    eval_result = self._evaluate_free_text_with_gemini(
-                        gemini_key, q.get("text", ""), user_text, q.get("ideal_answer", ""), source_excerpt, model_name=selected_model
-                    )
+                if not user_text:
+                    eval_result = {"score": 0.0, "explanation": "You skipped this question."}
+                else:
+                    eval_result = None
+                    if gemini_key and requests:
+                        eval_result = self._evaluate_free_text_with_gemini(
+                            gemini_key, q.get("text", ""), user_text, q.get("ideal_answer", ""), source_excerpt, model_name=selected_model
+                        )
                 
                 if eval_result:
                     q_score = float(eval_result.get("score", 0))

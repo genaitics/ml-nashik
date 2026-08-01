@@ -9,6 +9,7 @@ import { TeacherDashboardPage } from './pages/TeacherDashboardPage';
 import { StudentDashboardPage } from './pages/StudentDashboardPage';
 import { ClassAnalyticsPage } from './pages/ClassAnalyticsPage';
 import { ChatPage } from './pages/ChatPage';
+import { TeacherQuizPreviewPage } from './pages/TeacherQuizPreviewPage';
 
 export const App: React.FC = () => {
   // Restore initial state from localStorage if available
@@ -52,7 +53,7 @@ export const App: React.FC = () => {
     try {
       const quiz = await api.generateQuiz(documentData.doc_id, 5, selectedTopics);
       setQuizData(quiz);
-      setStep('quiz');
+      setStep(userRole === 'teacher' ? 'teacher-quiz-preview' : 'quiz');
     } catch (err) {
       console.error('Quiz generation error:', err);
     } finally {
@@ -144,6 +145,26 @@ export const App: React.FC = () => {
               isGenerating={isGenerating}
               uploadedDoc={documentData}
             />
+          )}
+
+          {step === 'teacher-quiz-preview' && (
+            quizData ? (
+              <TeacherQuizPreviewPage 
+                quiz={quizData} 
+                onAssignToClass={() => setStep('teacher-dashboard')}
+                onReturnToDashboard={() => setStep('teacher-dashboard')}
+              />
+            ) : (
+              <div className="max-w-xl mx-auto my-12 p-8 bg-paper-surface border-2 border-ink rounded-2xl text-center space-y-4 shadow-paper-sm">
+                <h3 className="font-serif text-2xl font-bold text-ink">No Quiz to Preview</h3>
+                <button
+                  onClick={() => setStep('upload')}
+                  className="bg-ink text-paper px-6 py-2.5 rounded-xl font-bold shadow-paper-sm hover:bg-ink-light transition-all text-sm"
+                >
+                  Return to Upload
+                </button>
+              </div>
+            )
           )}
 
           {step === 'quiz' && (
