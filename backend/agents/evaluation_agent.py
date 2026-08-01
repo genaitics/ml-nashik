@@ -15,7 +15,7 @@ except ImportError:
 class EvaluationAgent:
     def __init__(self, vector_store: ChromaVectorStore = None, model_name: str = None):
         self.vector_store = vector_store or ChromaVectorStore()
-        self.model_name = model_name or os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
+        self.model_name = model_name or os.getenv("GEMINI_MODEL", "gemma-4").strip()
 
     def evaluate_submission(self, db: Session, submission_id: str, model_name: str = None) -> Dict[str, Any]:
         """
@@ -23,7 +23,7 @@ class EvaluationAgent:
         evaluates answer correctness (MCQ or Free-text), calls Gemini API,
         generates personalized report, updates SQLite, and returns payload.
         """
-        selected_model = model_name or self.model_name or os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
+        selected_model = model_name or self.model_name or os.getenv("GEMINI_MODEL", "gemma-4").strip()
 
         sub = db.query(Submission).filter(Submission.id == submission_id).first()
         if not sub:

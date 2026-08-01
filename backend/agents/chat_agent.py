@@ -14,14 +14,14 @@ except ImportError:
 class ChatAgent:
     def __init__(self, vector_store: ChromaVectorStore = None, model_name: str = None):
         self.vector_store = vector_store or ChromaVectorStore()
-        self.model_name = model_name or os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
+        self.model_name = model_name or os.getenv("GEMINI_MODEL", "gemma-4").strip()
 
     def ask_question(self, db: Session, document_id: str, question: str, model_name: str = None) -> Dict[str, Any]:
         """
         Retrieves relevant syllabus chunks, prompts Gemini API to answer the question,
         and returns the answer along with the source chunks.
         """
-        selected_model = model_name or self.model_name or os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
+        selected_model = model_name or self.model_name or os.getenv("GEMINI_MODEL", "gemma-4").strip()
 
         # Verify document exists in DB
         doc = db.query(Document).filter(Document.id == document_id).first()
@@ -56,7 +56,7 @@ class ChatAgent:
             "model_name": selected_model
         }
 
-    def _call_gemini_for_answer(self, api_key: str, chunks: List[Dict[str, Any]], question: str, model_name: str = "gemini-1.5-flash") -> str:
+    def _call_gemini_for_answer(self, api_key: str, chunks: List[Dict[str, Any]], question: str, model_name: str = "gemma-4") -> str:
         """Prompts Gemini REST API to answer the question based strictly on chunks."""
         context_str = "\n---\n".join([f"[Chunk ID: {c['id']}]\n{c['text']}" for c in chunks])
         

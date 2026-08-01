@@ -16,14 +16,14 @@ except ImportError:
 class GenerationAgent:
     def __init__(self, vector_store: ChromaVectorStore = None, model_name: str = None):
         self.vector_store = vector_store or ChromaVectorStore()
-        self.model_name = model_name or os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
+        self.model_name = model_name or os.getenv("GEMINI_MODEL", "gemma-4").strip()
 
     def generate_quiz(self, db: Session, document_id: str, num_questions: int = 5, model_name: str = None) -> Dict[str, Any]:
         """
         Retrieves top syllabus chunks, prompts Gemini API (or fallback generator),
         creates strictly formatted MCQ JSON, saves to SQLite quizzes table, and returns result.
         """
-        selected_model = model_name or self.model_name or os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
+        selected_model = model_name or self.model_name or os.getenv("GEMINI_MODEL", "gemma-4").strip()
 
         # Verify document exists in DB
         doc = db.query(Document).filter(Document.id == document_id).first()
@@ -105,7 +105,7 @@ class GenerationAgent:
 
         return quiz_payload
 
-    def _call_gemini_for_questions(self, api_key: str, chunks: List[Dict[str, Any]], num_questions: int, model_name: str = "gemini-1.5-flash") -> List[Dict[str, Any]]:
+    def _call_gemini_for_questions(self, api_key: str, chunks: List[Dict[str, Any]], num_questions: int, model_name: str = "gemma-4") -> List[Dict[str, Any]]:
         """Prompts Gemini REST API for MCQ generation with retry-once logic for non-JSON output."""
         context_str = "\n---\n".join([f"[Chunk ID: {c['id']}]\n{c['text']}" for c in chunks])
         
