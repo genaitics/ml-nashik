@@ -1,16 +1,11 @@
+import os
 import math
 import re
+import requests
 from typing import List
 
-try:
-    from sentence_transformers import SentenceTransformer
-    _ST_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
-except Exception:
-    _ST_MODEL = None
-
-
-def _hashed_vector(text: str, dim: int = 384) -> List[float]:
-    """Fallback deterministic feature vectorizer for text when heavy model is absent."""
+def _hashed_vector(text: str, dim: int = 3072) -> List[float]:
+    """Fallback deterministic feature vectorizer for text when API fails."""
     vec = [0.0] * dim
     clean_text = text.lower()
     words = re.findall(r"\w+", clean_text)
@@ -19,38 +14,51 @@ def _hashed_vector(text: str, dim: int = 384) -> List[float]:
         return vec
 
     for word in words:
-        # Generate hash buckets for word and n-grams
         h1 = hash(word) % dim
         h2 = hash(word[::-1]) % dim
         vec[h1] += 1.0
         vec[h2] += 0.5
 
-    # L2 normalize
     norm = math.sqrt(sum(x * x for x in vec))
     if norm > 0:
         vec = [x / norm for x in vec]
     return vec
 
-
-def get_embedding(text: str) -> List[float]:
-    """Generates embedding vector for input text."""
-    if _ST_MODEL:
-        try:
-            return _ST_MODEL.encode(text).tolist()
-        except Exception:
-            pass
-    return _hashed_vector(text)
-
-
 def get_embeddings(texts: List[str]) -> List[List[float]]:
-    """Generates embedding vectors for list of texts."""
-    if _ST_MODEL:
+    """Generates embedding vectors for a list of texts using Gemini API."""
+    if not texts:
+        return []
+
+    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    if api_key:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:batchEmbedContents?key={api_key}"
+        headers = {"Content-Type": "application/json"}
+        requests_payload = []
+        for text in texts:
+            requests_payload.append({
+                "model": "models/gemini-embedding-2",
+                "content": {"parts": [{"text": text[:5000]}]} # Basic truncation for safety
+            })
+        
+        payload = {"requests": requests_payload}
         try:
-            return _ST_MODEL.encode(texts).tolist()
-        except Exception:
-            pass
+            resp = requests.post(url, json=payload, headers=headers, timeout=20)
+            if resp.status_code == 200:
+                data = resp.json()
+                embeddings = [item["values"] for item in data.get("embeddings", [])]
+                if len(embeddings) == len(texts):
+                    return embeddings
+            else:
+                print(f"[Embeddings] API Error: {resp.status_code} - {resp.text}")
+        except Exception as e:
+            print(f"[Embeddings] Network error: {e}")
+
+    # Fallback if API fails or key is missing
     return [_hashed_vector(t) for t in texts]
 
+def get_embedding(text: str) -> List[float]:
+    """Generates embedding vector for a single input text."""
+    return get_embeddings([text])[0]
 
 def cosine_similarity(v1: List[float], v2: List[float]) -> float:
     """Computes cosine similarity between two vectors."""
