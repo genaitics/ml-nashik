@@ -226,116 +226,53 @@ export const api = {
    * Upload Syllabus File
    */
   async uploadSyllabus(file: File): Promise<DocumentUploadResponse> {
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
+    const formData = new FormData();
+    formData.append('file', file);
 
-      const response = await fetch(`${API_BASE}/upload`, {
-        method: 'POST',
-        body: formData,
-      });
+    const response = await fetch(`${API_BASE}/upload`, {
+      method: 'POST',
+      body: formData,
+    });
 
-      if (!response.ok) {
-        throw new Error(`Upload failed with status ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (err) {
-      console.warn('API /upload endpoint unreachable or failed. Using fallback mock response.', err);
-      return {
-        ...MOCK_DOC_RESPONSE,
-        filename: file.name || MOCK_DOC_RESPONSE.filename,
-      };
+    if (!response.ok) {
+      throw new Error(`Upload failed with status ${response.status}. Please ensure the backend is running.`);
     }
+
+    return await response.json();
   },
 
   /**
    * Generate Quiz from Document
    */
   async generateQuiz(docId: string, numQuestions: number = 5): Promise<Quiz> {
-    try {
-      const response = await fetch(`${API_BASE}/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ doc_id: docId, num_questions: numQuestions }),
-      });
+    const response = await fetch(`${API_BASE}/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ doc_id: docId, num_questions: numQuestions }),
+    });
 
-      if (!response.ok) {
-        throw new Error(`Generate quiz failed with status ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (err) {
-      console.warn('API /generate endpoint unreachable or failed. Using fallback mock quiz.', err);
-      return {
-        ...MOCK_QUIZ,
-        doc_id: docId || MOCK_QUIZ.doc_id,
-      };
+    if (!response.ok) {
+      throw new Error(`Generate quiz failed with status ${response.status}. Please check backend logs and ensure GEMINI_API_KEY is set.`);
     }
+
+    return await response.json();
   },
 
   /**
    * Submit Quiz Answers & Get Evaluation
    */
   async submitQuiz(submission: QuizSubmission): Promise<EvaluationResult> {
-    try {
-      const response = await fetch(`${API_BASE}/submit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submission),
-      });
+    const response = await fetch(`${API_BASE}/submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(submission),
+    });
 
-      if (!response.ok) {
-        throw new Error(`Submit failed with status ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (err) {
-      console.warn('API /submit endpoint unreachable or failed. Calculating evaluation locally.', err);
-      
-      // Calculate evaluation from mock quiz
-      let correctCount = 0;
-      const questionsEval: QuestionEvaluation[] = MOCK_QUIZ.questions.map((q) => {
-        const studentAns = submission.answers.find((a) => a.question_id === q.id);
-        const selectedOpt = studentAns ? studentAns.selected_option : -1;
-        const isCorrect = selectedOpt === q.correct_option;
-        if (isCorrect) correctCount++;
-
-        return {
-          question_id: q.id,
-          question: q.question,
-          options: q.options,
-          selected_option: selectedOpt,
-          correct_option: q.correct_option,
-          is_correct: isCorrect,
-          topic: q.topic,
-          explanation: q.explanation,
-          source_excerpt: q.source_excerpt,
-        };
-      });
-
-      const total = MOCK_QUIZ.questions.length;
-      const percentage = Math.round((correctCount / total) * 100);
-
-      const weakTopics = Array.from(new Set(
-        questionsEval.filter(q => !q.is_correct).map(q => q.topic)
-      ));
-      
-      const strongTopics = Array.from(new Set(
-        questionsEval.filter(q => q.is_correct).map(q => q.topic)
-      ));
-
-      return {
-        evaluation_id: `eval_${Date.now()}`,
-        quiz_id: submission.quiz_id,
-        score: correctCount,
-        total,
-        percentage,
-        weak_topics: weakTopics.length > 0 ? weakTopics : ['None - Excellent performance!'],
-        strong_topics: strongTopics,
-        questions_eval: questionsEval,
-      };
+    if (!response.ok) {
+      throw new Error(`Submit failed with status ${response.status}. Please check backend logs.`);
     }
+
+    return await response.json();
   },
 
   /**
