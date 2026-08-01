@@ -22,62 +22,7 @@ interface ClassAnalyticsPageProps {
   onUploadNew?: () => void;
 }
 
-const MOCK_ROSTER: StudentAnalyticsItem[] = [
-  {
-    id: 's1',
-    name: 'Elena Loomis',
-    initials: 'EL',
-    avgScore: 94,
-    completedQuizzes: '12/12',
-    riskLevel: 'On Track',
-    avatarColor: 'bg-emerald-100 text-emerald-800 border-emerald-300'
-  },
-  {
-    id: 's2',
-    name: 'Julian West',
-    initials: 'JW',
-    avgScore: 72,
-    completedQuizzes: '10/12',
-    riskLevel: 'Needs Support',
-    avatarColor: 'bg-amber-100 text-amber-900 border-amber-300'
-  },
-  {
-    id: 's3',
-    name: 'Marcus Chen',
-    initials: 'MC',
-    avgScore: 58,
-    completedQuizzes: '8/12',
-    riskLevel: 'At Risk',
-    avatarColor: 'bg-rose-100 text-rose-800 border-rose-300'
-  },
-  {
-    id: 's4',
-    name: 'Sarah Porter',
-    initials: 'SP',
-    avgScore: 81,
-    completedQuizzes: '11/12',
-    riskLevel: 'On Track',
-    avatarColor: 'bg-emerald-100 text-emerald-800 border-emerald-300'
-  },
-  {
-    id: 's5',
-    name: 'Devon Vance',
-    initials: 'DV',
-    avgScore: 89,
-    completedQuizzes: '12/12',
-    riskLevel: 'On Track',
-    avatarColor: 'bg-emerald-100 text-emerald-800 border-emerald-300'
-  },
-  {
-    id: 's6',
-    name: 'Amara Okafor',
-    initials: 'AO',
-    avgScore: 64,
-    completedQuizzes: '9/12',
-    riskLevel: 'Needs Support',
-    avatarColor: 'bg-amber-100 text-amber-900 border-amber-300'
-  }
-];
+const ROSTER: StudentAnalyticsItem[] = [];
 
 export const ClassAnalyticsPage: React.FC<ClassAnalyticsPageProps> = ({
   onNavigate,
@@ -86,7 +31,7 @@ export const ClassAnalyticsPage: React.FC<ClassAnalyticsPageProps> = ({
   const [filterRisk, setFilterRisk] = useState<string>('All');
   const [selectedCourse, setSelectedCourse] = useState('Introduction to Ethics - Section B');
 
-  const filteredRoster = MOCK_ROSTER.filter(student => {
+  const filteredRoster = ROSTER.filter(student => {
     const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRisk = filterRisk === 'All' || student.riskLevel === filterRisk;
     return matchesSearch && matchesRisk;
@@ -393,7 +338,13 @@ export const ClassAnalyticsPage: React.FC<ClassAnalyticsPageProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ink/10 text-sm font-sans">
-                  {filteredRoster.map((student) => (
+                  {filteredRoster.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-5 py-10 text-center text-xs font-mono text-ink-pencil italic">
+                        No student data available yet. Student results will appear here after quiz submissions.
+                      </td>
+                    </tr>
+                  ) : filteredRoster.map((student) => (
                     <tr key={student.id} className="hover:bg-paper-container/30 transition-colors">
                       <td className="px-5 py-3.5">
                         <div className="flex items-center space-x-3">

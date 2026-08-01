@@ -13,8 +13,6 @@ import {
   Key,
   Eye,
   EyeOff,
-  Rocket,
-  Zap,
   X,
   CheckCircle2
 } from 'lucide-react';
@@ -27,7 +25,6 @@ interface HeaderProps {
   documentData: DocumentUploadResponse | null;
   quizData: Quiz | null;
   evaluationData: EvaluationResult | null;
-  onQuickDemoRun?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -38,7 +35,6 @@ export const Header: React.FC<HeaderProps> = ({
   documentData,
   quizData,
   evaluationData,
-  onQuickDemoRun,
 }) => {
   // Settings Modal State
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -82,19 +78,13 @@ export const Header: React.FC<HeaderProps> = ({
               <BookOpen className="w-6 h-6 text-highlighter" />
             </div>
             <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-serif font-bold text-2xl text-ink tracking-tight">
-                  EduMentor <span className="text-ink font-light">AI</span>
-                </span>
-                <span className="text-xs font-mono uppercase bg-highlighter px-2 py-0.5 rounded font-semibold text-ink border border-ink/20">
-                  Digital Guide
-                </span>
-              </div>
-              <p className="text-xs font-sans text-ink-pencil">Syllabus-to-Quiz RAG Engine</p>
+              <span className="font-serif font-bold text-2xl text-ink tracking-tight">
+                Pariksha <span className="text-ink font-light">AI</span>
+              </span>
             </div>
           </div>
 
-          {/* Center Action Group: Role Switcher & Hackathon Demo Button */}
+          {/* Center Action Group: Role Switcher */}
           <div className="flex items-center space-x-2">
             
             {/* Role Switcher Pill */}
@@ -128,17 +118,7 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             </div>
 
-            {/* 🚀 One-Click Hackathon Quick Demo Header Action */}
-            {onQuickDemoRun && (
-              <button
-                onClick={onQuickDemoRun}
-                className="bg-amber-400 hover:bg-amber-300 text-ink px-3 py-1.5 rounded-xl font-mono text-xs font-bold border-2 border-ink shadow-paper-sm flex items-center space-x-1.5 active:scale-95 transition-all"
-                title="Populate full Machine Learning Syllabus RAG pipeline in under 2 seconds"
-              >
-                <Zap className="w-3.5 h-3.5 text-ink fill-ink" />
-                <span className="hidden sm:inline">🚀 Hackathon Demo (2s)</span>
-              </button>
-            )}
+
 
             {/* 🔑 Settings Modal Trigger Button */}
             <button
@@ -372,7 +352,7 @@ export const Header: React.FC<HeaderProps> = ({
                         <span className="font-bold text-sm text-ink">{m.name}</span>
                         {m.recommended && (
                           <span className="text-[10px] font-mono bg-ink text-paper px-2 py-0.5 rounded font-bold">
-                            Default / Hackathon
+                            Default
                           </span>
                         )}
                       </div>
@@ -405,7 +385,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               </div>
               <p className="text-[11px] font-mono text-ink-pencil">
-                Saved securely in browser localStorage (`edumentor_ai_settings`). Leave empty to use system default.
+                Saved securely in browser localStorage. Leave empty to use system default.
               </p>
             </div>
 

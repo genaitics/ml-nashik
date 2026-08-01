@@ -11,7 +11,7 @@ generation_agent = GenerationAgent()
 
 
 class GenerateRequest(BaseModel):
-    document_id: str = Field(..., description="UUID of the uploaded document")
+    doc_id: str = Field(..., description="UUID of the uploaded document")
     num_questions: int = Field(5, ge=1, le=20, description="Number of questions to generate")
 
 
@@ -27,7 +27,7 @@ def generate_quiz(
     try:
         quiz_payload = generation_agent.generate_quiz(
             db=db,
-            document_id=request.document_id,
+            document_id=request.doc_id,
             num_questions=request.num_questions
         )
         return quiz_payload
@@ -67,7 +67,7 @@ def get_quiz(
 
     return {
         "quiz_id": quiz.id,
-        "document_id": quiz.document_id,
+        "doc_id": quiz.document_id,
         "questions": questions,
         "created_at": quiz.created_at.isoformat() if quiz.created_at else None
     }

@@ -11,6 +11,39 @@ class DocumentAgent:
     def __init__(self, vector_store: ChromaVectorStore = None):
         self.vector_store = vector_store or ChromaVectorStore()
 
+    def _extract_topics(self, text: str, num_topics: int = 5) -> list[str]:
+        import re
+        from collections import Counter
+        
+        # Find sequences of Title Case words
+        pattern = re.compile(r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b')
+        matches = pattern.findall(text)
+        
+        stopwords = {"The", "This", "That", "There", "Here", "It", "A", "An", "In", "On", "At", "To", "And", "Or", "Is", "Are", "For", "With", "By", "As", "Of", "From"}
+        
+        valid_phrases = []
+        for match in matches:
+            words = match.split()
+            # Require at least one word that is not a stopword and is reasonably long
+            if any(w not in stopwords and len(w) > 3 for w in words):
+                # Filter out leading stopwords
+                start_idx = 0
+                while start_idx < len(words) and words[start_idx] in stopwords:
+                    start_idx += 1
+                
+                if start_idx < len(words):
+                    clean_phrase = " ".join(words[start_idx:])
+                    if clean_phrase:
+                        valid_phrases.append(clean_phrase)
+                        
+        counter = Counter(valid_phrases)
+        top_topics = [phrase for phrase, count in counter.most_common(num_topics)]
+        
+        if not top_topics:
+             top_topics = ["General Syllabus Concepts", "Core Principles", "Methodologies"]
+             
+        return top_topics
+
     def process_document(self, db: Session, file_path: str, filename: str) -> Dict[str, Any]:
         """
         Processes an uploaded PDF/TXT document:
@@ -57,7 +90,14 @@ class DocumentAgent:
         db.commit()
         db.refresh(db_doc)
 
+        word_count = len(raw_text.split()) if raw_text else 0
+        detected_topics = self._extract_topics(raw_text, 5)
+
         return {
-            "document_id": doc_id,
+            "doc_id": doc_id,
+            "filename": filename,
+            "word_count": word_count,
+            "topics_detected": detected_topics,
+            "message": "Syllabus analyzed successfully.",
             "chunk_count": len(chunks)
         }

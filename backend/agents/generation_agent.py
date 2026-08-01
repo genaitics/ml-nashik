@@ -53,11 +53,7 @@ class GenerationAgent:
             questions = self._call_gemini_for_questions(gemini_key, retrieved_chunks, num_questions, model_name=selected_model)
 
         if not questions:
-            # Try loading demo precache questions first
-            questions = self._load_precache_questions(num_questions)
-
-        if not questions:
-            # Grounded fallback heuristic quiz generator
+            # Grounded fallback heuristic quiz generator based on actual PDF text
             questions = self._generate_fallback_questions(retrieved_chunks, num_questions)
 
         # Enrich chunk metadata
@@ -87,7 +83,7 @@ class GenerationAgent:
 
         quiz_payload = {
             "quiz_id": quiz_id,
-            "document_id": document_id,
+            "doc_id": document_id,
             "model_name": selected_model,
             "questions": questions,
             "chunk_metadata": chunk_metadata_list
@@ -118,12 +114,15 @@ class GenerationAgent:
             "Return ONLY a JSON array of question objects matching this exact schema without any markdown formatting:\n"
             "[\n"
             "  {\n"
-            '    "id": "q1",\n'
+            '    "id": 1,\n'
             '    "type": "mcq", // or "short" or "long"\n'
-            '    "text": "Question text here?",\n'
+            '    "question": "Question text here?",\n'
             '    "options": ["Option A", "Option B", "Option C", "Option D"], // empty for short/long\n'
-            '    "correct_option": "A", // empty for short/long\n'
+            '    "correct_option": 0, // 0-indexed integer (0, 1, 2, or 3). -1 for short/long\n'
             '    "ideal_answer": "...", // The grading rubric or ideal text answer for short/long (empty for mcq)\n'
+            '    "topic": "Brief topic name",\n'
+            '    "explanation": "Explanation of the correct answer",\n'
+            '    "source_excerpt": "Quote from the text that proves the answer",\n'
             '    "source_chunk_id": "chunk_0"\n'
             "  }\n"
             "]"
@@ -213,12 +212,15 @@ class GenerationAgent:
                         q_type = "mcq"
 
                     parsed.append({
-                        "id": str(q.get("id", f"q{idx}")),
+                        "id": int(q.get("id", idx)),
                         "type": q_type,
-                        "text": str(q.get("text", "Syllabus Question")),
+                        "question": str(q.get("question", q.get("text", "Syllabus Question"))),
                         "options": list(q.get("options", ["Option A", "Option B", "Option C", "Option D"])) if q_type == "mcq" else [],
-                        "correct_option": str(q.get("correct_option", "A")).upper()[0] if q.get("correct_option") else "",
+                        "correct_option": int(q.get("correct_option", 0)),
                         "ideal_answer": str(q.get("ideal_answer", "")),
+                        "topic": str(q.get("topic", "General Concept")),
+                        "explanation": str(q.get("explanation", "Based on the syllabus content.")),
+                        "source_excerpt": str(q.get("source_excerpt", "Syllabus excerpt.")),
                         "source_chunk_id": str(q.get("source_chunk_id", "chunk_0"))
                     })
                 return parsed
@@ -254,10 +256,15 @@ class GenerationAgent:
             opt_d = f"General Topic {i+1}"
 
             questions.append({
-                "id": f"q{i+1}",
-                "text": question_text,
+                "id": i+1,
+                "type": "mcq",
+                "question": question_text,
                 "options": [correct, opt_b, opt_c, opt_d],
-                "correct_option": "A",
+                "correct_option": 0,
+                "ideal_answer": "",
+                "topic": "Syllabus Concept",
+                "explanation": f"The missing concept is {correct}.",
+                "source_excerpt": sent,
                 "source_chunk_id": chunk_id
             })
 

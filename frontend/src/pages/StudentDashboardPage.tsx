@@ -25,6 +25,7 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({
 }) => {
   const [data, setData] = useState<StudentDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   // Modal state for Grounding Review
   const [modalOpen, setModalOpen] = useState(false);
@@ -46,7 +47,10 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({
       })
       .catch((err) => {
         console.error('Failed to load student dashboard:', err);
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+          setError(true);
+        }
       });
     return () => { isMounted = false; };
   }, []);
@@ -66,6 +70,24 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({
       <div className="max-w-6xl mx-auto px-4 py-20 flex flex-col items-center justify-center space-y-4">
         <Loader2 className="w-10 h-10 animate-spin text-ink-muted" />
         <p className="font-mono text-sm text-ink-pencil">Loading Student Portal Metrics...</p>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-20 flex flex-col items-center justify-center space-y-4 text-center">
+        <GraduationCap className="w-16 h-16 text-ink-pencil/30" />
+        <p className="font-serif text-2xl font-bold text-ink">Welcome to Pariksha AI</p>
+        <p className="font-sans text-sm text-ink-pencil max-w-md">
+          Upload a syllabus and take a quiz to see your personalized dashboard and progress metrics here.
+        </p>
+        <button
+          onClick={() => onNavigate('my-courses')}
+          className="bg-ink text-paper px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-ink-light transition shadow-paper-sm"
+        >
+          Get Started
+        </button>
       </div>
     );
   }

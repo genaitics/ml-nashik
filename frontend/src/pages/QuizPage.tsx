@@ -13,7 +13,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({
   onSubmitQuiz,
   isSubmitting,
 }) => {
-  const storageKey = `edumentor_quiz_progress_${quiz.quiz_id}`;
+  const storageKey = `pariksha_quiz_progress_${quiz.quiz_id}`;
 
   const [currentIndex, setCurrentIndex] = useState<number>(() => {
     try {

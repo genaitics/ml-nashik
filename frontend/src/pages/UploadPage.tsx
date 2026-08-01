@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { DocumentUploadResponse } from '../types';
-import { UploadCloud, FileText, CheckCircle2, Sparkles, AlertCircle, ArrowRight, RefreshCw, FileCode, Zap, Rocket } from 'lucide-react';
+import { UploadCloud, FileText, CheckCircle2, Sparkles, AlertCircle, ArrowRight, RefreshCw, FileCode } from 'lucide-react';
 import { api } from '../api/client';
 
 interface UploadPageProps {
@@ -8,7 +8,6 @@ interface UploadPageProps {
   onGenerateQuiz: () => void;
   isGenerating: boolean;
   uploadedDoc: DocumentUploadResponse | null;
-  onQuickDemoRun?: () => void;
 }
 
 export const UploadPage: React.FC<UploadPageProps> = ({
@@ -16,7 +15,6 @@ export const UploadPage: React.FC<UploadPageProps> = ({
   onGenerateQuiz,
   isGenerating,
   uploadedDoc,
-  onQuickDemoRun,
 }) => {
   const [dragActive, setDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -75,46 +73,10 @@ export const UploadPage: React.FC<UploadPageProps> = ({
     }
   };
 
-  const handleSampleSyllabus = () => {
-    const mockFile = new File(['Sample ML Syllabus Content'], 'CS402_Machine_Learning_Syllabus.pdf', { type: 'application/pdf' });
-    handleFileUpload(mockFile);
-  };
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8 animate-fadeIn">
       
-      {/* 🚀 Prominent Hackathon One-Click Live Demo Banner */}
-      <div className="bg-gradient-to-r from-highlighter via-highlighter-soft to-amber-200 border-2 border-ink rounded-2xl p-5 shadow-paper-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 rounded-xl bg-ink text-highlighter flex items-center justify-center border-2 border-ink shrink-0 shadow-paper-sm">
-            <Rocket className="w-7 h-7 text-highlighter animate-bounce" />
-          </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <h3 className="font-serif font-bold text-lg text-ink">
-                🚀 One-Click Hackathon Live Demo (Machine Learning Syllabus)
-              </h3>
-              <span className="text-[10px] font-mono uppercase bg-ink text-paper px-2 py-0.5 rounded font-bold">
-                Instant &lt;2s Flow
-              </span>
-            </div>
-            <p className="text-xs font-sans text-ink-pencil mt-0.5">
-              Judges: Instantly populate document ingestion, quiz generation, RAG grounding proof, and class analytics pipeline!
-            </p>
-          </div>
-        </div>
-
-        {onQuickDemoRun && (
-          <button
-            onClick={onQuickDemoRun}
-            className="w-full sm:w-auto px-6 py-3 bg-ink hover:bg-ink-light text-paper rounded-xl font-mono text-xs font-bold transition-all border-2 border-ink flex items-center justify-center space-x-2 shadow-paper-md shrink-0 active:scale-95"
-          >
-            <Zap className="w-4 h-4 text-highlighter" />
-            <span>⚡ Run Quick Demo (2s)</span>
-          </button>
-        )}
-      </div>
-
       {/* Page Heading */}
       <div className="text-center space-y-3">
         <span className="text-xs font-mono uppercase tracking-widest text-ink-pencil bg-paper-container px-3 py-1 rounded-full border border-ink/10 inline-block font-semibold">
@@ -124,7 +86,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({
           Upload Syllabus & <span className="highlighter-effect">Generate Quiz</span>
         </h1>
         <p className="text-ink-muted max-w-xl mx-auto text-base">
-          Drop your course syllabus, lecture notes, or PDF textbook. EduMentor AI extracts core concepts and builds an instant RAG-grounded quiz.
+          Drop your course syllabus, lecture notes, or PDF textbook. Pariksha AI extracts core concepts and builds an instant RAG-grounded quiz.
         </p>
       </div>
 
@@ -175,14 +137,6 @@ export const UploadPage: React.FC<UploadPageProps> = ({
                 >
                   <FileText className="w-4 h-4 text-highlighter" />
                   <span>Browse File</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSampleSyllabus}
-                  className="px-5 py-2.5 bg-highlighter text-ink rounded-lg font-medium text-sm hover:bg-highlighter-hover transition border border-ink/30 flex items-center space-x-2 shadow-paper-sm"
-                >
-                  <Sparkles className="w-4 h-4 text-ink" />
-                  <span>Try Sample ML Syllabus</span>
                 </button>
               </div>
             </div>
@@ -265,13 +219,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({
             </div>
 
             <div className="flex flex-wrap gap-2 pt-1">
-              {(uploadedDoc?.topics_detected || [
-                'Supervised Learning',
-                'Bias-Variance Tradeoff',
-                'Overfitting & Regularization',
-                'Gradient Descent Optimization',
-                'Neural Networks & Backpropagation'
-              ]).map((topic, i) => (
+              {(uploadedDoc?.topics_detected || []).map((topic, i) => (
                 <span
                   key={i}
                   className="bg-paper-surface text-ink px-3 py-1.5 rounded-lg text-xs font-mono border border-ink/20 shadow-paper-sm flex items-center space-x-1.5"
@@ -280,6 +228,9 @@ export const UploadPage: React.FC<UploadPageProps> = ({
                   <span>{topic}</span>
                 </span>
               ))}
+              {(!uploadedDoc || uploadedDoc.topics_detected.length === 0) && (
+                <p className="text-xs font-mono text-ink-pencil italic">Upload a syllabus to detect topics.</p>
+              )}
             </div>
           </div>
 
@@ -292,7 +243,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({
               </span>
             </div>
             <p className="text-xs font-sans text-ink leading-relaxed">
-              EduMentor AI maps questions directly to course learning outcomes. Click <strong>"Generate Quiz"</strong> below to create your 5-question test.
+              Pariksha AI maps questions directly to course learning outcomes. Click <strong>"Generate Quiz"</strong> below to create your 5-question test.
             </p>
           </div>
 

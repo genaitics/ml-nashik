@@ -30,6 +30,7 @@ export const TeacherDashboardPage: React.FC<TeacherDashboardPageProps> = ({
 }) => {
   const [data, setData] = useState<TeacherDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   // Quick Quiz Architect state
   const [selectedFormats, setSelectedFormats] = useState({
@@ -49,7 +50,10 @@ export const TeacherDashboardPage: React.FC<TeacherDashboardPageProps> = ({
       })
       .catch((err) => {
         console.error('Failed to load teacher dashboard:', err);
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+          setError(true);
+        }
       });
     return () => { isMounted = false; };
   }, []);
@@ -63,6 +67,24 @@ export const TeacherDashboardPage: React.FC<TeacherDashboardPageProps> = ({
       <div className="max-w-6xl mx-auto px-4 py-20 flex flex-col items-center justify-center space-y-4">
         <Loader2 className="w-10 h-10 animate-spin text-ink-muted" />
         <p className="font-mono text-sm text-ink-pencil">Loading Teacher Portal Metrics...</p>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-20 flex flex-col items-center justify-center space-y-4 text-center">
+        <p className="font-serif text-2xl font-bold text-ink">No Data Yet</p>
+        <p className="font-sans text-sm text-ink-pencil max-w-md">
+          Connect your backend to load real class metrics, or upload a syllabus to get started.
+        </p>
+        <button
+          onClick={onUploadNew}
+          className="flex items-center space-x-2 bg-highlighter text-ink px-5 py-2.5 rounded-xl font-bold border-2 border-ink shadow-paper-sm hover:brightness-105 transition-all text-sm"
+        >
+          <Upload className="w-4 h-4" />
+          <span>Upload First Syllabus</span>
+        </button>
       </div>
     );
   }

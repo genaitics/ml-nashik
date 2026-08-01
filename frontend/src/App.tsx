@@ -44,23 +44,7 @@ export const App: React.FC = () => {
     setDocumentData(doc);
   };
 
-  // One-Click Quick Demo Runner for Judges (<2s end-to-end execution)
-  const handleQuickDemoRun = async () => {
-    setIsGenerating(true);
-    try {
-      const demoRes = await api.runQuickDemo();
-      setDocumentData(demoRes.documentData);
-      setQuizData(demoRes.quizData);
-      setEvaluationData(demoRes.evaluationData);
-      setStep('results');
-    } catch (err) {
-      console.error('Quick demo error:', err);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
 
-  // Generate quiz handler
   const handleGenerateQuiz = async () => {
     if (!documentData) return;
     setIsGenerating(true);
@@ -127,7 +111,6 @@ export const App: React.FC = () => {
         documentData={documentData}
         quizData={quizData}
         evaluationData={evaluationData}
-        onQuickDemoRun={handleQuickDemoRun}
       />
 
       {/* Main Content Area with Smooth Slide/Fade Transitions */}
@@ -160,7 +143,6 @@ export const App: React.FC = () => {
               onGenerateQuiz={handleGenerateQuiz}
               isGenerating={isGenerating}
               uploadedDoc={documentData}
-              onQuickDemoRun={handleQuickDemoRun}
             />
           )}
 
@@ -229,7 +211,7 @@ export const App: React.FC = () => {
       {/* Tactile Footer */}
       <footer className="border-t border-ink/15 py-6 bg-paper-surface/60">
         <div className="max-w-6xl mx-auto px-4 text-center text-xs font-mono text-ink-pencil space-y-1">
-          <p>EduMentor AI — Digital Study Guide & Syllabus-to-Quiz RAG Engine</p>
+          <p>Pariksha AI — Digital Study Guide</p>
           <p className="opacity-75">Tactile Minimalism Design • Dual Teacher & Student Portals</p>
         </div>
       </footer>

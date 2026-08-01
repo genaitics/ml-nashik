@@ -104,7 +104,7 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
                 </span>
               </div>
               <p className="text-xs font-sans text-ink-pencil mt-0.5">
-                Exposes exact vector embeddings, similarity cosine metrics, source chunk IDs, page citations, and side-by-side raw text verification for hackathon judges!
+                Exposes exact vector embeddings, similarity cosine metrics, source chunk IDs, page citations, and side-by-side raw text verification.
               </p>
             </div>
           </div>
