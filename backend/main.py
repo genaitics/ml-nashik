@@ -38,15 +38,13 @@ def on_startup():
 
 
 # Include API routers
-app.include_router(upload_router)
-app.include_router(generate_router)
-app.include_router(submit_router)
-app.include_router(evaluate_router)
-app.include_router(dashboard_router)
+app.include_router(upload_router, prefix="/api")
+app.include_router(generate_router, prefix="/api")
+app.include_router(submit_router, prefix="/api")
+app.include_router(evaluate_router, prefix="/api")
 app.include_router(dashboard_router, prefix="/api")
-app.include_router(dashboard_router, prefix="/dashboard")
-app.include_router(demo_router)
-app.include_router(chat_router)
+app.include_router(demo_router, prefix="/api")
+app.include_router(chat_router, prefix="/api")
 
 
 @app.get("/")

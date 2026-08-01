@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { DocumentUploadResponse } from '../types';
 import { UploadCloud, FileText, CheckCircle2, Sparkles, AlertCircle, ArrowRight, RefreshCw, FileCode, Zap, Rocket } from 'lucide-react';
+import { api } from '../api/client';
 
 interface UploadPageProps {
   onUploadSuccess: (docData: DocumentUploadResponse, fileObj?: File) => void;
@@ -23,38 +24,30 @@ export const UploadPage: React.FC<UploadPageProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const simulateAnalysis = (file: File) => {
+  const handleFileUpload = async (file: File) => {
     setSelectedFile(file);
     setIsUploading(true);
     setProgress(15);
 
     const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 75) {
-          // Pause at 75% as per specification animation
-          clearInterval(interval);
-          setTimeout(() => {
-            setProgress(100);
-            setIsUploading(false);
-            onUploadSuccess({
-              doc_id: 'doc_ml_' + Math.floor(Math.random() * 1000),
-              filename: file.name,
-              word_count: 4250,
-              topics_detected: [
-                'Supervised Learning',
-                'Bias-Variance Tradeoff',
-                'Overfitting & Regularization',
-                'Gradient Descent Optimization',
-                'Neural Networks & Backpropagation'
-              ],
-              message: 'Syllabus analyzed successfully.'
-            }, file);
-          }, 600);
-          return 75;
-        }
-        return prev + 20;
-      });
-    }, 200);
+      setProgress((prev) => (prev < 85 ? prev + 15 : prev));
+    }, 500);
+
+    try {
+      const response = await api.uploadSyllabus(file);
+      clearInterval(interval);
+      setProgress(100);
+      
+      setTimeout(() => {
+        setIsUploading(false);
+        onUploadSuccess(response, file);
+      }, 500);
+    } catch (err) {
+      clearInterval(interval);
+      setIsUploading(false);
+      alert("Upload failed. Make sure your backend is running.");
+      console.error("Upload error:", err);
+    }
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -72,19 +65,19 @@ export const UploadPage: React.FC<UploadPageProps> = ({
     e.stopPropagation();
     setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      simulateAnalysis(e.dataTransfer.files[0]);
+      handleFileUpload(e.dataTransfer.files[0]);
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      simulateAnalysis(e.target.files[0]);
+      handleFileUpload(e.target.files[0]);
     }
   };
 
   const handleSampleSyllabus = () => {
     const mockFile = new File(['Sample ML Syllabus Content'], 'CS402_Machine_Learning_Syllabus.pdf', { type: 'application/pdf' });
-    simulateAnalysis(mockFile);
+    handleFileUpload(mockFile);
   };
 
   return (
