@@ -289,6 +289,22 @@ export const Header: React.FC<HeaderProps> = ({
                   <Award className="w-3.5 h-3.5" />
                   <span>Progress & Citation</span>
                 </button>
+
+                {/* Student Nav 5: Q&A Chat */}
+                <button
+                  onClick={() => documentData && onNavigate('chat')}
+                  disabled={!documentData}
+                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+                    currentStep === 'chat'
+                      ? 'bg-ink text-paper shadow-paper-sm'
+                      : documentData
+                      ? 'text-ink-muted hover:text-ink hover:bg-paper-surface/60'
+                      : 'text-ink-pencil/40 cursor-not-allowed'
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Q&A Chat</span>
+                </button>
               </>
             )}
 

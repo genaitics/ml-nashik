@@ -7,7 +7,8 @@ import {
   SavedAppState,
   TeacherDashboardData,
   StudentDashboardData,
-  AISettings
+  AISettings,
+  ChatResponse
 } from '../types';
 
 const STORAGE_KEY = 'edumentor_app_state';
@@ -333,6 +334,32 @@ export const api = {
         weak_topics: weakTopics.length > 0 ? weakTopics : ['None - Excellent performance!'],
         strong_topics: strongTopics,
         questions_eval: questionsEval,
+      };
+    }
+  },
+
+  /**
+   * Ask a question in the Q&A Chatbot
+   */
+  async askQuestion(docId: string, question: string, modelName?: string): Promise<ChatResponse> {
+    try {
+      const response = await fetch(`${API_BASE}/ask`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ document_id: docId, question, model_name: modelName }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Ask question failed with status ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (err) {
+      console.warn('API /ask endpoint unreachable or failed.', err);
+      return {
+        answer: "I'm sorry, I couldn't connect to the AI model to answer your question at this time. Please make sure the backend is running.",
+        source_chunks: [],
+        model_name: modelName || 'Gemma 4 (Google GenAI)'
       };
     }
   },

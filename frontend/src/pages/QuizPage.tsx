@@ -24,7 +24,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({
     }
   });
 
-  const [userAnswers, setUserAnswers] = useState<Record<number, number>>(() => {
+  const [userAnswers, setUserAnswers] = useState<Record<number, number | string>>(() => {
     try {
       const saved = localStorage.getItem(`${storageKey}_ans`);
       return saved ? JSON.parse(saved) : {};
@@ -50,10 +50,10 @@ export const QuizPage: React.FC<QuizPageProps> = ({
   const answeredCount = Object.keys(userAnswers).length;
   const isLastQuestion = currentIndex === totalQuestions - 1;
 
-  const handleSelectOption = (optionIndex: number) => {
+  const handleAnswer = (answer: number | string) => {
     setUserAnswers((prev) => ({
       ...prev,
-      [currentQuestion.id]: optionIndex,
+      [currentQuestion.id]: answer,
     }));
   };
 
@@ -75,10 +75,16 @@ export const QuizPage: React.FC<QuizPageProps> = ({
       localStorage.removeItem(`${storageKey}_ans`);
     } catch (err) {}
 
-    const formattedAnswers: AnswerSubmit[] = quiz.questions.map((q) => ({
-      question_id: q.id,
-      selected_option: userAnswers[q.id] ?? -1,
-    }));
+    const formattedAnswers: AnswerSubmit[] = quiz.questions.map((q) => {
+      const ans = userAnswers[q.id];
+      if (typeof ans === 'number') {
+        return { question_id: q.id, selected_option: ans };
+      } else if (typeof ans === 'string') {
+        return { question_id: q.id, selected_option: -1, text_answer: ans };
+      } else {
+        return { question_id: q.id, selected_option: -1 };
+      }
+    });
     onSubmitQuiz(formattedAnswers);
   };
 
@@ -143,41 +149,59 @@ export const QuizPage: React.FC<QuizPageProps> = ({
           </h3>
         </div>
 
-        {/* MCQ Options List */}
+        {/* Answer Input Area */}
         <div className="space-y-3 pt-2">
-          {currentQuestion.options.map((optionText, idx) => {
-            const isSelected = userAnswers[currentQuestion.id] === idx;
-            return (
-              <button
-                key={idx}
-                onClick={() => handleSelectOption(idx)}
-                className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-start space-x-4 ${
-                  isSelected
-                    ? 'border-ink bg-highlighter-soft shadow-paper-md scale-[1.005]'
-                    : 'border-ink/20 bg-paper-low hover:border-ink hover:bg-paper-container'
-                }`}
-              >
-                {/* Option Letter Tag */}
-                <span className={`w-8 h-8 rounded-lg font-mono font-bold text-sm flex items-center justify-center shrink-0 border transition-colors ${
-                  isSelected
-                    ? 'bg-ink text-paper border-ink'
-                    : 'bg-paper-surface text-ink border-ink/20'
-                }`}>
-                  {optionLetters[idx]}
-                </span>
+          {(!currentQuestion.type || currentQuestion.type === 'mcq') ? (
+            currentQuestion.options.map((optionText, idx) => {
+              const isSelected = userAnswers[currentQuestion.id] === idx;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => handleAnswer(idx)}
+                  className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-start space-x-4 ${
+                    isSelected
+                      ? 'border-ink bg-highlighter-soft shadow-paper-md scale-[1.005]'
+                      : 'border-ink/20 bg-paper-low hover:border-ink hover:bg-paper-container'
+                  }`}
+                >
+                  {/* Option Letter Tag */}
+                  <span className={`w-8 h-8 rounded-lg font-mono font-bold text-sm flex items-center justify-center shrink-0 border transition-colors ${
+                    isSelected
+                      ? 'bg-ink text-paper border-ink'
+                      : 'bg-paper-surface text-ink border-ink/20'
+                  }`}>
+                    {optionLetters[idx]}
+                  </span>
 
-                {/* Option Content */}
-                <div className="flex-1 pt-1 font-sans text-sm sm:text-base text-ink leading-relaxed">
-                  {optionText}
-                </div>
+                  {/* Option Content */}
+                  <div className="flex-1 pt-1 font-sans text-sm sm:text-base text-ink leading-relaxed">
+                    {optionText}
+                  </div>
 
-                {/* Selection Checkmark */}
-                {isSelected && (
-                  <CheckCircle2 className="w-5 h-5 text-ink shrink-0 mt-1" />
-                )}
-              </button>
-            );
-          })}
+                  {/* Selection Checkmark */}
+                  {isSelected && (
+                    <CheckCircle2 className="w-5 h-5 text-ink shrink-0 mt-1" />
+                  )}
+                </button>
+              );
+            })
+          ) : currentQuestion.type === 'short' ? (
+            <input
+              type="text"
+              value={(userAnswers[currentQuestion.id] as string) || ''}
+              onChange={(e) => handleAnswer(e.target.value)}
+              placeholder="Type your short answer here..."
+              className="w-full bg-paper border-2 border-ink/40 rounded-xl px-4 py-3 font-sans focus:outline-none focus:border-ink focus:ring-1 focus:ring-ink"
+            />
+          ) : (
+            <textarea
+              value={(userAnswers[currentQuestion.id] as string) || ''}
+              onChange={(e) => handleAnswer(e.target.value)}
+              placeholder="Type your detailed answer here..."
+              rows={5}
+              className="w-full bg-paper border-2 border-ink/40 rounded-xl px-4 py-3 font-sans focus:outline-none focus:border-ink focus:ring-1 focus:ring-ink resize-y"
+            />
+          )}
         </div>
 
         {/* Footer Navigation Bar inside Question Card */}

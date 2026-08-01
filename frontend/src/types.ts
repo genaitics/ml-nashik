@@ -8,9 +8,11 @@ export interface DocumentUploadResponse {
 
 export interface Question {
   id: number;
+  type?: 'mcq' | 'short' | 'long';
   question: string;
   options: string[];
-  correct_option: number; // 0-indexed
+  correct_option: number; // 0-indexed, -1 if not mcq
+  ideal_answer?: string;
   topic: string;
   explanation: string;
   source_excerpt: string;
@@ -27,6 +29,7 @@ export interface Quiz {
 export interface AnswerSubmit {
   question_id: number;
   selected_option: number;
+  text_answer?: string;
 }
 
 export interface QuizSubmission {
@@ -39,8 +42,11 @@ export interface QuestionEvaluation {
   question: string;
   options: string[];
   selected_option: number;
+  text_answer?: string;
   correct_option: number;
   is_correct: boolean;
+  score?: number;
+  max_score?: number;
   topic: string;
   explanation: string;
   source_excerpt: string;
@@ -49,12 +55,13 @@ export interface QuestionEvaluation {
 export interface EvaluationResult {
   evaluation_id: string;
   quiz_id: string;
-  score: number;
+  score: number | string;
   total: number;
   percentage: number;
   weak_topics: string[];
   strong_topics: string[];
   questions_eval: QuestionEvaluation[];
+  personalized_report?: string;
 }
 
 export type UserRole = 'teacher' | 'student';
@@ -66,7 +73,25 @@ export type PageStep =
   | 'quiz' 
   | 'results' 
   | 'my-courses'
-  | 'class-analytics';
+  | 'class-analytics'
+  | 'chat';
+
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  source_chunks?: {
+    id: string;
+    text: string;
+    page_number: number;
+    similarity_score: number;
+  }[];
+}
+
+export interface ChatResponse {
+  answer: string;
+  source_chunks: any[];
+  model_name: string;
+}
 
 export type AIModelChoice = 'Gemma 4 (Google GenAI)' | 'Gemini 1.5 Flash' | 'Gemini 2.5 Flash';
 
@@ -164,6 +189,7 @@ export interface SavedAppState {
   documentData: DocumentUploadResponse | null;
   quizData: Quiz | null;
   evaluationData: EvaluationResult | null;
+  chatHistory?: ChatMessage[];
   documentId: string | null;
   quizId: string | null;
   submissionId: string | null;

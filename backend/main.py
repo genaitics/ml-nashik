@@ -14,6 +14,7 @@ from api.submit import router as submit_router
 from api.evaluate import router as evaluate_router
 from api.dashboard import router as dashboard_router
 from api.demo import router as demo_router
+from api.chat import router as chat_router
 
 app = FastAPI(
     title="EduMentor AI Backend",
@@ -45,6 +46,7 @@ app.include_router(dashboard_router)
 app.include_router(dashboard_router, prefix="/api")
 app.include_router(dashboard_router, prefix="/dashboard")
 app.include_router(demo_router)
+app.include_router(chat_router)
 
 
 @app.get("/")

@@ -110,7 +110,8 @@ class GenerationAgent:
         context_str = "\n---\n".join([f"[Chunk ID: {c['id']}]\n{c['text']}" for c in chunks])
         
         prompt = (
-            f"You are generating {num_questions} multiple choice exam questions strictly from the provided syllabus excerpts.\n"
+            f"You are generating {num_questions} exam questions strictly from the provided syllabus excerpts.\n"
+            "Generate a mix of 'mcq', 'short', and 'long' question types.\n"
             "Do NOT use outside knowledge.\n"
             "Excerpts:\n"
             f"{context_str}\n\n"
@@ -118,9 +119,11 @@ class GenerationAgent:
             "[\n"
             "  {\n"
             '    "id": "q1",\n'
+            '    "type": "mcq", // or "short" or "long"\n'
             '    "text": "Question text here?",\n'
-            '    "options": ["Option A", "Option B", "Option C", "Option D"],\n'
-            '    "correct_option": "A",\n'
+            '    "options": ["Option A", "Option B", "Option C", "Option D"], // empty for short/long\n'
+            '    "correct_option": "A", // empty for short/long\n'
+            '    "ideal_answer": "...", // The grading rubric or ideal text answer for short/long (empty for mcq)\n'
             '    "source_chunk_id": "chunk_0"\n'
             "  }\n"
             "]"
@@ -205,11 +208,17 @@ class GenerationAgent:
             if isinstance(data, list) and len(data) > 0:
                 parsed = []
                 for idx, q in enumerate(data, start=1):
+                    q_type = str(q.get("type", "mcq")).lower()
+                    if q_type not in ["mcq", "short", "long"]:
+                        q_type = "mcq"
+
                     parsed.append({
                         "id": str(q.get("id", f"q{idx}")),
+                        "type": q_type,
                         "text": str(q.get("text", "Syllabus Question")),
-                        "options": list(q.get("options", ["Option A", "Option B", "Option C", "Option D"])),
-                        "correct_option": str(q.get("correct_option", "A")).upper()[0],
+                        "options": list(q.get("options", ["Option A", "Option B", "Option C", "Option D"])) if q_type == "mcq" else [],
+                        "correct_option": str(q.get("correct_option", "A")).upper()[0] if q.get("correct_option") else "",
+                        "ideal_answer": str(q.get("ideal_answer", "")),
                         "source_chunk_id": str(q.get("source_chunk_id", "chunk_0"))
                     })
                 return parsed

@@ -211,6 +211,19 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
           </div>
         </div>
 
+        {/* Personalized Feedback Report Banner */}
+        {evaluation.personalized_report && (
+          <div className="bg-sage/10 p-5 rounded-2xl border-2 border-sage-dark/30 shadow-paper-sm space-y-3">
+            <div className="flex items-center space-x-2 text-sage-deep">
+              <Sparkles className="w-5 h-5" />
+              <h3 className="font-serif font-bold text-xl">Personalized AI Feedback Report</h3>
+            </div>
+            <p className="font-sans text-sm text-ink-muted leading-relaxed whitespace-pre-wrap">
+              {evaluation.personalized_report}
+            </p>
+          </div>
+        )}
+
         {/* Weak & Strong Topics Analysis */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           
@@ -334,45 +347,63 @@ export const ResultsPage: React.FC<ResultsPageProps> = ({
                 {qEval.question}
               </h3>
 
-              {/* Option Breakdown */}
+              {/* Answer Breakdown */}
               <div className="grid grid-cols-1 gap-2 pt-1">
-                {qEval.options.map((optText, optIdx) => {
-                  const isSelected = qEval.selected_option === optIdx;
-                  const isCorrectOpt = qEval.correct_option === optIdx;
-
-                  let styleClass = 'bg-paper-low border-ink/10 text-ink-pencil';
-                  if (isCorrectOpt) {
-                    styleClass = 'bg-sage/40 border-sage-dark text-sage-deep font-medium';
-                  } else if (isSelected && !isCorrectOpt) {
-                    styleClass = 'bg-red-50 border-red-300 text-red-900 font-medium';
-                  }
-
-                  return (
-                    <div 
-                      key={optIdx}
-                      className={`p-3 rounded-lg border text-sm font-sans flex items-start space-x-3 ${styleClass}`}
-                    >
-                      <span className={`w-6 h-6 rounded font-mono text-xs font-bold flex items-center justify-center shrink-0 ${
-                        isCorrectOpt ? 'bg-sage-dark text-paper' : isSelected ? 'bg-red-700 text-white' : 'bg-paper-container text-ink-pencil'
-                      }`}>
-                        {optionLetters[optIdx]}
+                {(!qEval.options || qEval.options.length === 0) ? (
+                  <div className={`p-4 rounded-lg border text-sm font-sans flex flex-col space-y-2 ${
+                    qEval.is_correct ? 'bg-sage/20 border-sage-dark' : 'bg-red-50 border-red-300'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-xs font-bold text-ink-pencil uppercase tracking-wider">
+                        Your Written Answer
                       </span>
-
-                      <span className="flex-1 pt-0.5">{optText}</span>
-
-                      {isCorrectOpt && (
-                        <span className="text-xs font-mono bg-sage-dark text-paper px-2 py-0.5 rounded shrink-0 font-semibold">
-                          Correct Option
-                        </span>
-                      )}
-                      {isSelected && !isCorrectOpt && (
-                        <span className="text-xs font-mono bg-red-700 text-white px-2 py-0.5 rounded shrink-0 font-semibold">
-                          Your Choice
-                        </span>
-                      )}
+                      <span className="font-mono text-xs font-bold bg-ink text-paper px-2 py-0.5 rounded">
+                        Score: {qEval.score} / {qEval.max_score}
+                      </span>
                     </div>
-                  );
-                })}
+                    <p className="text-ink leading-relaxed italic">
+                      "{qEval.text_answer || "No answer provided."}"
+                    </p>
+                  </div>
+                ) : (
+                  qEval.options.map((optText, optIdx) => {
+                    const isSelected = qEval.selected_option === optIdx;
+                    const isCorrectOpt = qEval.correct_option === optIdx;
+
+                    let styleClass = 'bg-paper-low border-ink/10 text-ink-pencil';
+                    if (isCorrectOpt) {
+                      styleClass = 'bg-sage/40 border-sage-dark text-sage-deep font-medium';
+                    } else if (isSelected && !isCorrectOpt) {
+                      styleClass = 'bg-red-50 border-red-300 text-red-900 font-medium';
+                    }
+
+                    return (
+                      <div 
+                        key={optIdx}
+                        className={`p-3 rounded-lg border text-sm font-sans flex items-start space-x-3 ${styleClass}`}
+                      >
+                        <span className={`w-6 h-6 rounded font-mono text-xs font-bold flex items-center justify-center shrink-0 ${
+                          isCorrectOpt ? 'bg-sage-dark text-paper' : isSelected ? 'bg-red-700 text-white' : 'bg-paper-container text-ink-pencil'
+                        }`}>
+                          {optionLetters[optIdx]}
+                        </span>
+
+                        <span className="flex-1 pt-0.5">{optText}</span>
+
+                        {isCorrectOpt && (
+                          <span className="text-xs font-mono bg-sage-dark text-paper px-2 py-0.5 rounded shrink-0 font-semibold">
+                            Correct Option
+                          </span>
+                        )}
+                        {isSelected && !isCorrectOpt && (
+                          <span className="text-xs font-mono bg-red-700 text-white px-2 py-0.5 rounded shrink-0 font-semibold">
+                            Your Choice
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
               </div>
 
               {/* 🔍 Judge's Proof Mode (RAG Grounding & Vector Similarity Inspector) Box */}

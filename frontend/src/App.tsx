@@ -8,6 +8,7 @@ import { ResultsPage } from './pages/ResultsPage';
 import { TeacherDashboardPage } from './pages/TeacherDashboardPage';
 import { StudentDashboardPage } from './pages/StudentDashboardPage';
 import { ClassAnalyticsPage } from './pages/ClassAnalyticsPage';
+import { ChatPage } from './pages/ChatPage';
 
 export const App: React.FC = () => {
   // Restore initial state from localStorage if available
@@ -200,6 +201,23 @@ export const App: React.FC = () => {
                   className="bg-ink text-paper px-6 py-2.5 rounded-xl font-bold shadow-paper-sm hover:bg-ink-light transition-all text-sm"
                 >
                   Return to Dashboard
+                </button>
+              </div>
+            )
+          )}
+
+          {step === 'chat' && (
+            documentData ? (
+              <ChatPage documentData={documentData} />
+            ) : (
+              <div className="max-w-xl mx-auto my-12 p-8 bg-paper-surface border-2 border-ink rounded-2xl text-center space-y-4 shadow-paper-sm">
+                <h3 className="font-serif text-2xl font-bold text-ink">No Document Available</h3>
+                <p className="text-sm font-sans text-ink-pencil">Please upload or select a syllabus to start the Q&A Chat.</p>
+                <button
+                  onClick={() => setStep('upload')}
+                  className="bg-highlighter text-ink px-6 py-2.5 rounded-xl font-bold border-2 border-ink shadow-paper-sm hover:brightness-105 transition-all text-sm"
+                >
+                  Upload Syllabus
                 </button>
               </div>
             )
