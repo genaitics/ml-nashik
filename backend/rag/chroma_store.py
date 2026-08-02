@@ -19,7 +19,11 @@ class ChromaVectorStore:
     def __init__(self, storage_dir: Optional[str] = None):
         if not storage_dir:
             backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            storage_dir = os.getenv("CHROMA_DB_DIR", os.path.join(backend_dir, "chromadb_data"))
+            if os.getenv("VERCEL") == "1":
+                default_dir = "/tmp/chromadb_data"
+            else:
+                default_dir = os.path.join(backend_dir, "chromadb_data")
+            storage_dir = os.getenv("CHROMA_DB_DIR", default_dir)
         
         self.storage_dir = storage_dir
         os.makedirs(self.storage_dir, exist_ok=True)

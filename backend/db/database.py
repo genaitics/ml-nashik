@@ -2,7 +2,13 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DB_PATH = os.getenv("DATABASE_URL", "sqlite:///./database.db")
+DB_PATH = os.getenv("DATABASE_URL")
+if not DB_PATH:
+    if os.getenv("VERCEL") == "1":
+        DB_PATH = "sqlite:////tmp/database.db"
+    else:
+        DB_PATH = "sqlite:///./database.db"
+
 if DB_PATH.startswith("sqlite:///") and not DB_PATH.startswith("sqlite:////"):
     # Ensure relative paths resolve relative to backend directory
     backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
