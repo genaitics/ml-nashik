@@ -42,7 +42,11 @@ async def upload_document(
 
 
     backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    uploads_dir = os.getenv("UPLOADS_DIR", os.path.join(backend_dir, "uploads"))
+    if os.getenv("VERCEL") == "1":
+        default_uploads = "/tmp/uploads"
+    else:
+        default_uploads = os.path.join(backend_dir, "uploads")
+    uploads_dir = os.getenv("UPLOADS_DIR", default_uploads)
     os.makedirs(uploads_dir, exist_ok=True)
 
     saved_filepath = os.path.join(uploads_dir, filename)

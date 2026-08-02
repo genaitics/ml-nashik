@@ -30,8 +30,9 @@ def demo_quick_run(db: Session = Depends(get_db)):
         syllabus_path = os.path.join(backend_dir, "uploads", "sample_syllabus.pdf")
 
     if not os.path.exists(syllabus_path):
-        os.makedirs(os.path.join(backend_dir, "uploads"), exist_ok=True)
-        syllabus_path = os.path.join(backend_dir, "uploads", "sample_syllabus.txt")
+        target_dir = "/tmp/uploads" if os.getenv("VERCEL") == "1" else os.path.join(backend_dir, "uploads")
+        os.makedirs(target_dir, exist_ok=True)
+        syllabus_path = os.path.join(target_dir, "sample_syllabus.txt")
         with open(syllabus_path, "w", encoding="utf-8") as f:
             f.write(
                 "EduMentor AI Machine Learning Syllabus\n"
