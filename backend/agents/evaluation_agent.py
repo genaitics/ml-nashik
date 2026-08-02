@@ -17,7 +17,7 @@ class EvaluationAgent:
         self.vector_store = vector_store or ChromaVectorStore()
         self.model_name = model_name or os.getenv("GEMINI_MODEL", "gemma-4-26b-a4b-it").strip()
 
-    def evaluate_submission(self, db: Session, submission_id: str, model_name: str = None) -> Dict[str, Any]:
+    def evaluate_submission(self, db: Session, submission_id: str, model_name: str = None, quiz_data: dict = None) -> Dict[str, Any]:
         """
         Retrieves submission and quiz, looks up source chunk per question,
         evaluates answer correctness (MCQ or Free-text), calls Gemini API,
@@ -36,10 +36,16 @@ class EvaluationAgent:
                 pass
 
         quiz = db.query(Quiz).filter(Quiz.id == sub.quiz_id).first()
-        if not quiz:
+        if not quiz and not quiz_data:
             raise ValueError(f"Associated quiz with ID '{sub.quiz_id}' not found.")
 
-        questions = json.loads(quiz.questions_json)
+        if quiz:
+            questions = json.loads(quiz.questions_json)
+            document_id = quiz.document_id
+        else:
+            questions = quiz_data.get("questions", [])
+            document_id = quiz_data.get("doc_id", "default")
+
         answers_list = json.loads(sub.answers_json)
         user_answers = {
             a["question_id"]: {
@@ -63,7 +69,7 @@ class EvaluationAgent:
             user_text = ans_data.get("text_answer", "").strip()
             
             chunk_id = q.get("source_chunk_id", "chunk_0")
-            chunk_info = self.vector_store.get_chunk_by_id(quiz.document_id, chunk_id)
+            chunk_info = self.vector_store.get_chunk_by_id(document_id, chunk_id)
             source_excerpt = chunk_info["text"] if chunk_info else "Syllabus ground truth excerpt."
 
             chunk_meta = {

@@ -70,7 +70,7 @@ export const App: React.FC = () => {
       const evalResult = await api.submitQuiz({
         quiz_id: quizData.quiz_id,
         answers,
-      });
+      }, quizData);
       setEvaluationData(evalResult);
       setStep('results');
     } catch (err) {

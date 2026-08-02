@@ -20,6 +20,7 @@ class AnswerItem(BaseModel):
 class EvaluateRequest(BaseModel):
     quiz_id: str
     answers: list[AnswerItem]
+    quiz_data: dict = None
 
 
 @router.post("/evaluate", status_code=status.HTTP_200_OK)
@@ -47,7 +48,7 @@ def evaluate_submission(
         db.commit()
         db.refresh(db_sub)
         
-        result = evaluation_agent.evaluate_submission(db, sub_id)
+        result = evaluation_agent.evaluate_submission(db, sub_id, quiz_data=request.quiz_data)
         return result
     except ValueError as ve:
         raise HTTPException(

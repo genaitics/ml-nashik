@@ -82,11 +82,11 @@ export const api = {
   /**
    * Submit Quiz Answers & Get Evaluation
    */
-  async submitQuiz(submission: QuizSubmission): Promise<EvaluationResult> {
+  async submitQuiz(submission: QuizSubmission, quizData?: Quiz): Promise<EvaluationResult> {
     const response = await fetch(`${API_BASE}/evaluate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(submission),
+      body: JSON.stringify({ ...submission, quiz_data: quizData }),
     });
 
     if (!response.ok) {
