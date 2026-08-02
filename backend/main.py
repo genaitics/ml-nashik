@@ -16,6 +16,8 @@ from api.dashboard import router as dashboard_router
 from api.demo import router as demo_router
 from api.chat import router as chat_router
 
+print("LOADED MAIN.PY")
+
 app = FastAPI(
     title="EduMentor AI Backend",
     description="RAG-powered interactive quiz generation and automated grounded evaluation API",
